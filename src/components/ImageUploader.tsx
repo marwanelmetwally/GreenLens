@@ -140,13 +140,13 @@ export function ImageUploader({ onFileChange, onAnalyze, isAnalyzing, analysisEr
           <button className="button button-primary analyze-button" type="button" disabled={!selectedFile || isAnalyzing} onClick={onAnalyze}>
             {isAnalyzing ? <><LoaderCircle className="spin" size={18} /> جارٍ تحليل الصورة</> : 'تحليل الصورة'}
           </button>
-          <p>{IS_STATIC_PAGES_BUILD ? 'سيتم تجهيز نتيجة تجريبية للعرض على الموقع العام.' : 'سيتم إرسال الصورة إلى خدمة التحليل لمعالجة النتيجة.'}</p>
+          <p>{selectedCrop === 'mango' ? 'سيعمل نموذج MangoLeafBD المدرب داخل المتصفح دون إرسال الصورة للخارج.' : (IS_STATIC_PAGES_BUILD ? 'سيتم تجهيز نتيجة تجريبية للعرض على الموقع العام.' : 'سيتم إرسال الصورة إلى خدمة التحليل لمعالجة النتيجة.')}</p>
         </div>
 
         {isAnalyzing && (
           <div className="loading-message" role="status" aria-live="polite">
             <LoaderCircle className="spin" size={20} aria-hidden="true" />
-            <span>{IS_STATIC_PAGES_BUILD ? 'جارٍ تجهيز النتيجة التجريبية...' : 'جارٍ تحليل الصورة عبر خدمة النباتات...'}</span>
+            <span>{selectedCrop === 'mango' ? 'جارٍ تشغيل نموذج المانجو محليًا...' : (IS_STATIC_PAGES_BUILD ? 'جارٍ تجهيز النتيجة التجريبية...' : 'جارٍ تحليل الصورة عبر خدمة النباتات...')}</span>
           </div>
         )}
 
