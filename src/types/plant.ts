@@ -1,4 +1,5 @@
 export type PlantHealth = 'healthy' | 'affected';
+export type PlantCrop = 'mango' | 'tomato';
 
 export interface PlantAnalysis {
   plantName: string;

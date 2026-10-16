@@ -1,0 +1,5 @@
+torch>=2.6,<3
+torchvision>=0.21,<1
+pyarrow>=18,<27
+Pillow>=10,<13
+onnx>=1.17,<2

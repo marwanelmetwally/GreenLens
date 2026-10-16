@@ -8,6 +8,9 @@ const isGitHubPagesBuild = Boolean(
 export default defineConfig(({ command }) => ({
   plugins: [react()],
   base: command === 'build' || isGitHubPagesBuild ? '/GreenLens/' : '/',
+  resolve: {
+    conditions: ['onnxruntime-web-use-extern-wasm', 'module', 'browser', 'default'],
+  },
   server: {
     proxy: {
       '/api': 'http://127.0.0.1:3001',

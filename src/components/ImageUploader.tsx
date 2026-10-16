@@ -1,19 +1,22 @@
 import { AlertCircle, CheckCircle2, Image as ImageIcon, LoaderCircle, RefreshCw, UploadCloud } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
+import type { PlantCrop } from '../types/plant';
 
 interface ImageUploaderProps {
   onFileChange: (file: File | null) => void;
   onAnalyze: () => void;
   isAnalyzing: boolean;
   analysisError: string;
+  selectedCrop: PlantCrop;
+  onCropChange: (crop: PlantCrop) => void;
 }
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const IS_STATIC_PAGES_BUILD = !import.meta.env.VITE_API_URL && import.meta.env.BASE_URL !== '/';
 
-export function ImageUploader({ onFileChange, onAnalyze, isAnalyzing, analysisError }: ImageUploaderProps) {
+export function ImageUploader({ onFileChange, onAnalyze, isAnalyzing, analysisError, selectedCrop, onCropChange }: ImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -78,6 +81,15 @@ export function ImageUploader({ onFileChange, onAnalyze, isAnalyzing, analysisEr
             <h2 id="upload-heading">حمّل صورة النبات</h2>
             <p>اختر صورة واضحة لورقة أو نبات حتى نعرض لك نموذج النتيجة.</p>
           </div>
+        </div>
+
+        <div className="crop-selector" aria-labelledby="crop-label">
+          <label id="crop-label" htmlFor="plant-crop">نوع النبات</label>
+          <select id="plant-crop" value={selectedCrop} onChange={(event) => onCropChange(event.target.value as PlantCrop)}>
+            <option value="mango">مانجو — نموذج MangoLeafBD المحلي</option>
+            <option value="tomato">طماطم — خدمة التحليل المتصلة</option>
+          </select>
+          <p>{selectedCrop === 'mango' ? 'سيتم تشغيل النموذج المدرب داخل المتصفح دون إرسال الصورة للخارج.' : 'سيتم إرسال الصورة إلى خدمة Plant.id الآمنة عبر الخادم.'}</p>
         </div>
 
         <div className={`uploader-card ${selectedFile ? 'has-file' : ''}`}>

@@ -56,6 +56,11 @@ a { color: inherit; text-decoration: none; }
 .section-number { display: grid; flex: 0 0 auto; place-items: center; width: 34px; height: 34px; border-radius: 10px; color: #166534; background: #e9f9ed; font-size: .75rem; font-weight: 800; }
 .section-heading h2, .result-header h2 { margin: 0; color: #1f2937; font-size: 1.35rem; letter-spacing: -.03em; }
 .section-heading p { margin: 4px 0 0; color: #8a929d; font-size: .84rem; }
+.crop-selector { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 8px 12px; margin-bottom: 14px; padding: 13px 15px; border: 1px solid #dcefe1; border-radius: 14px; background: #f7fcf8; }
+.crop-selector label { color: #166534; font-size: .8rem; font-weight: 800; }
+.crop-selector select { min-width: 0; padding: 9px 11px; border: 1px solid #cfe6d4; border-radius: 9px; color: #1f2937; background: #fff; font-size: .8rem; }
+.crop-selector select:focus { outline: 3px solid rgba(34,197,94,.25); border-color: #22c55e; }
+.crop-selector p { grid-column: 1 / -1; margin: 0; color: #758379; font-size: .7rem; line-height: 1.7; }
 .uploader-card { padding: 12px; border: 1px solid #e4ebe6; border-radius: 20px; background: #fff; box-shadow: 0 16px 40px rgba(22, 101, 52, .06); }
 .dropzone { display: flex; min-height: 296px; flex-direction: column; align-items: center; justify-content: center; gap: 9px; padding: 32px 20px; border: 1.5px dashed #9dd4ab; border-radius: 14px; color: #6b7280; background: #fbfefb; cursor: pointer; transition: background .2s ease, border-color .2s ease, transform .2s ease; }
 .dropzone:hover { border-color: #22c55e; background: #f0fdf4; }

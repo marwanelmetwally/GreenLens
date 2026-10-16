@@ -6,3 +6,12 @@ dist/
 .env
 .env.*
 !.env.example
+
+# Local machine-learning data and checkpoints
+data/
+models/*.pt
+models/*.pth
+models/*.onnx
+ml/.venv/
+ml/.packages/
+__pycache__/

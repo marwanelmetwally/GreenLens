@@ -1,5 +1,6 @@
 import http from 'node:http';
 import fs from 'node:fs';
+import { isTomatoPlant, tomatoIssueFrom } from '../api/analyze.mjs';
 
 const envPath = new URL('../.env', import.meta.url);
 if (fs.existsSync(envPath)) {
@@ -15,6 +16,51 @@ const HOST = process.env.HOST || '0.0.0.0';
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '*';
 const MAX_BODY_SIZE = 8 * 1024 * 1024;
 const PLANT_ID_ENDPOINT = 'https://api.plant.id/v3/identification';
+
+const ARABIC_PLANT_NAMES = {
+  'Solanum lycopersicum': 'الطماطم',
+  'Solanum tuberosum': 'البطاطس',
+  'Capsicum annuum': 'الفلفل',
+  'Cucumis sativus': 'الخيار',
+  'Cucumis melo': 'الشمام',
+  'Citrullus lanatus': 'البطيخ',
+  'Zea mays': 'الذرة',
+  'Triticum aestivum': 'القمح',
+  'Oryza sativa': 'الأرز',
+  'Phaseolus vulgaris': 'الفاصوليا',
+  'Vicia faba': 'الفول',
+  'Pisum sativum': 'البازلاء',
+  'Solanum melongena': 'الباذنجان',
+  'Citrus sinensis': 'البرتقال',
+  'Citrus limon': 'الليمون',
+  'Mangifera indica': 'المانجو',
+  'Musa acuminata': 'الموز',
+  'Olea europaea': 'الزيتون',
+  'Vitis vinifera': 'العنب',
+  'Fragaria × ananassa': 'الفراولة',
+  'Fragaria x ananassa': 'الفراولة',
+  'Malus domestica': 'التفاح',
+  'Coffea arabica': 'البن العربي',
+  'Nicotiana tabacum': 'التبغ',
+  'Rosa': 'الورد',
+  'Ocimum basilicum': 'الريحان',
+  'Mentha': 'النعناع',
+  'Zingiber officinale': 'الزنجبيل',
+  'Allium cepa': 'البصل',
+  'Allium sativum': 'الثوم',
+  'Daucus carota': 'الجزر',
+  'Lactuca sativa': 'الخس',
+  'Brassica oleracea': 'الكرنب',
+  'Spinacia oleracea': 'السبانخ',
+};
+
+function arabicPlantName(suggestion) {
+  const scientificName = typeof suggestion?.name === 'string' ? suggestion.name.trim() : '';
+  return ARABIC_PLANT_NAMES[scientificName]
+    || suggestion?.details?.common_names?.[0]
+    || scientificName
+    || 'نبات غير محدد';
+}
 
 function sendJson(response, status, body) {
   response.writeHead(status, {
@@ -117,14 +163,16 @@ async function analyzePlantImage(image) {
   const diseaseSuggestion = result.disease?.suggestions?.[0];
   const healthy = result.is_healthy?.binary === true;
   const diseaseDetails = diseaseSuggestion?.details || {};
+  const tomatoIssue = tomatoIssueFrom(diseaseSuggestion);
+  const tomatoNeedsReview = isTomatoPlant(plantSuggestion) && !healthy && !tomatoIssue;
 
   return {
-    plantName: plantSuggestion?.name || 'نبات غير محدد',
+    plantName: arabicPlantName(plantSuggestion),
     health: healthy ? 'healthy' : 'affected',
     healthLabel: healthy ? 'سليم' : 'مصاب أو متأثر',
-    possibleIssue: diseaseSuggestion?.name || (healthy ? 'لم تظهر مؤشرات مرض واضحة' : 'مؤشرات تحتاج إلى فحص متخصص'),
-    summary: diseaseDetails.description || (healthy ? 'لم ترصد الخدمة مؤشرات واضحة على مشكلة صحية في الصورة.' : 'رصدت الخدمة مؤشرات صحية تحتاج إلى مراجعة.'),
-    recommendations: recommendationsFrom(diseaseDetails.treatment),
+    possibleIssue: tomatoIssue?.name || diseaseSuggestion?.name || (tomatoNeedsReview ? 'مؤشرات تحتاج إلى صورة أوضح' : (healthy ? 'لم تظهر مؤشرات مرض واضحة' : 'مؤشرات تحتاج إلى فحص متخصص')),
+    summary: tomatoIssue?.summary || diseaseDetails.description || (tomatoNeedsReview ? 'تعرّفت الخدمة على نبات طماطم، لكن الصورة الحالية لا تكفي لتحديد مرض أو آفة بعينها.' : (healthy ? 'لم ترصد الخدمة مؤشرات واضحة على مشكلة صحية في الصورة.' : 'رصدت الخدمة مؤشرات صحية تحتاج إلى مراجعة.')),
+    recommendations: tomatoIssue?.recommendations || (tomatoNeedsReview ? ['التقط صورة قريبة وواضحة للورقة أو الثمرة المصابة.', 'صوّر ظهر الورقة والسيقان إن وُجدت أعراض.', 'افحص النبات بحثًا عن حشرات صغيرة أو أنفاق أو بقع.', 'استشر متخصصًا قبل استخدام أي مبيد.'] : recommendationsFrom(diseaseDetails.treatment)),
     isMock: false,
   };
 }
