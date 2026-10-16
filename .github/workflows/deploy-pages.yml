@@ -36,6 +36,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build frontend
+        env:
+          VITE_API_URL: https://greenlens-api.vercel.app
         run: pnpm run build
 
       - name: Upload Pages artifact
