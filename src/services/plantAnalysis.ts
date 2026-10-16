@@ -1,7 +1,8 @@
 import type { PlantAnalysis } from '../types/plant';
 
 const MAX_API_PIXELS = 2_000_000;
-const IS_STATIC_PAGES_BUILD = import.meta.env.BASE_URL !== '/';
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const IS_STATIC_PAGES_BUILD = !API_BASE_URL && import.meta.env.BASE_URL !== '/';
 
 const STATIC_DEMO_RESULT: PlantAnalysis = {
   plantName: 'الطماطم (مثال تجريبي)',
@@ -50,7 +51,7 @@ async function fileToDataUrl(file: File): Promise<string> {
 export async function analyzePlantImage(image: File): Promise<PlantAnalysis> {
   const dataUrl = await fileToDataUrl(image);
   try {
-    const response = await fetch('/api/analyze', {
+    const response = await fetch(`${API_BASE_URL}/api/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ image: dataUrl }),

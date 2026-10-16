@@ -10,14 +10,19 @@ if (fs.existsSync(envPath)) {
   }
 }
 
-const PORT = 3001;
+const PORT = Number(process.env.PORT) || 3001;
+const HOST = process.env.HOST || '0.0.0.0';
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '*';
 const MAX_BODY_SIZE = 8 * 1024 * 1024;
 const PLANT_ID_ENDPOINT = 'https://api.plant.id/v3/identification';
 
 function sendJson(response, status, body) {
   response.writeHead(status, {
     'Content-Type': 'application/json; charset=utf-8',
-    'Access-Control-Allow-Origin': 'http://localhost:5173',
+    'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    Vary: 'Origin',
   });
   response.end(JSON.stringify(body));
 }
@@ -127,8 +132,10 @@ async function analyzePlantImage(image) {
 const server = http.createServer(async (request, response) => {
   if (request.method === 'OPTIONS') {
     response.writeHead(204, {
-      'Access-Control-Allow-Origin': 'http://localhost:5173',
+      'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
+      Vary: 'Origin',
     });
     response.end();
     return;
@@ -154,6 +161,6 @@ const server = http.createServer(async (request, response) => {
   }
 });
 
-server.listen(PORT, '127.0.0.1', () => {
-  console.log(`GreenLens API proxy listening on http://127.0.0.1:${PORT}`);
+server.listen(PORT, HOST, () => {
+  console.log(`GreenLens API proxy listening on ${HOST}:${PORT}`);
 });

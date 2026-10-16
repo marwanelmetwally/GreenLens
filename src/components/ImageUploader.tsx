@@ -11,7 +11,7 @@ interface ImageUploaderProps {
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const IS_STATIC_PAGES_BUILD = import.meta.env.BASE_URL !== '/';
+const IS_STATIC_PAGES_BUILD = !import.meta.env.VITE_API_URL && import.meta.env.BASE_URL !== '/';
 
 export function ImageUploader({ onFileChange, onAnalyze, isAnalyzing, analysisError }: ImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);

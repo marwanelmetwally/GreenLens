@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: greenlens-api
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server/index.mjs
+    envVars:
+      - key: PLANT_ID_API_KEY
+        sync: false
+      - key: ALLOWED_ORIGIN
+        value: https://marwanelmetwally.github.io
