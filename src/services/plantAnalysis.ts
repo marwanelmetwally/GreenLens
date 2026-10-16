@@ -1,6 +1,22 @@
 import type { PlantAnalysis } from '../types/plant';
 
 const MAX_API_PIXELS = 2_000_000;
+const IS_STATIC_PAGES_BUILD = import.meta.env.BASE_URL !== '/';
+
+const STATIC_DEMO_RESULT: PlantAnalysis = {
+  plantName: 'الطماطم (مثال تجريبي)',
+  health: 'affected',
+  healthLabel: 'مصاب',
+  possibleIssue: 'اللفحة المبكرة',
+  summary: 'قد تظهر بقع بنية على الأوراق، وتزداد مع تطور الإصابة.',
+  recommendations: [
+    'إزالة الأوراق شديدة الإصابة.',
+    'تحسين التهوية حول النبات.',
+    'تجنب بلل الأوراق عند الري.',
+    'متابعة حالة النبات واستشارة متخصص عند الحاجة.',
+  ],
+  isMock: true,
+};
 
 async function fileToDataUrl(file: File): Promise<string> {
   const originalDataUrl = await new Promise<string>((resolve, reject) => {
@@ -33,16 +49,21 @@ async function fileToDataUrl(file: File): Promise<string> {
 /** Sends the image to the local proxy, which keeps the Plant.id key on the server. */
 export async function analyzePlantImage(image: File): Promise<PlantAnalysis> {
   const dataUrl = await fileToDataUrl(image);
-  const response = await fetch('/api/analyze', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ image: dataUrl }),
-  });
+  try {
+    const response = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: dataUrl }),
+    });
 
-  const payload = await response.json().catch(() => null) as { message?: string } | null;
-  if (!response.ok) {
-    throw new Error(payload?.message || 'تعذر الوصول إلى خدمة تحليل النباتات.');
+    const payload = await response.json().catch(() => null) as { message?: string } | null;
+    if (!response.ok) {
+      throw new Error(payload?.message || 'تعذر الوصول إلى خدمة تحليل النباتات.');
+    }
+
+    return payload as PlantAnalysis;
+  } catch (error) {
+    if (IS_STATIC_PAGES_BUILD) return STATIC_DEMO_RESULT;
+    throw error;
   }
-
-  return payload as PlantAnalysis;
 }

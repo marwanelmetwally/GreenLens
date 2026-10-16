@@ -11,6 +11,7 @@ interface ImageUploaderProps {
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const IS_STATIC_PAGES_BUILD = import.meta.env.BASE_URL !== '/';
 
 export function ImageUploader({ onFileChange, onAnalyze, isAnalyzing, analysisError }: ImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -127,13 +128,13 @@ export function ImageUploader({ onFileChange, onAnalyze, isAnalyzing, analysisEr
           <button className="button button-primary analyze-button" type="button" disabled={!selectedFile || isAnalyzing} onClick={onAnalyze}>
             {isAnalyzing ? <><LoaderCircle className="spin" size={18} /> جارٍ تحليل الصورة</> : 'تحليل الصورة'}
           </button>
-          <p>سيتم إرسال الصورة إلى خدمة التحليل لمعالجة النتيجة.</p>
+          <p>{IS_STATIC_PAGES_BUILD ? 'سيتم تجهيز نتيجة تجريبية للعرض على الموقع العام.' : 'سيتم إرسال الصورة إلى خدمة التحليل لمعالجة النتيجة.'}</p>
         </div>
 
         {isAnalyzing && (
           <div className="loading-message" role="status" aria-live="polite">
             <LoaderCircle className="spin" size={20} aria-hidden="true" />
-            <span>جارٍ تحليل الصورة عبر خدمة النباتات...</span>
+            <span>{IS_STATIC_PAGES_BUILD ? 'جارٍ تجهيز النتيجة التجريبية...' : 'جارٍ تحليل الصورة عبر خدمة النباتات...'}</span>
           </div>
         )}
 
