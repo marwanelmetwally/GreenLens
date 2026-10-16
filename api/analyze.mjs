@@ -1,11 +1,57 @@
 const PLANT_ID_ENDPOINT = 'https://api.plant.id/v3/identification';
 const MAX_BODY_SIZE = 8 * 1024 * 1024;
 
+const ARABIC_PLANT_NAMES = {
+  'Solanum lycopersicum': 'الطماطم',
+  'Solanum tuberosum': 'البطاطس',
+  'Capsicum annuum': 'الفلفل',
+  'Cucumis sativus': 'الخيار',
+  'Cucumis melo': 'الشمام',
+  'Citrullus lanatus': 'البطيخ',
+  'Zea mays': 'الذرة',
+  'Triticum aestivum': 'القمح',
+  'Oryza sativa': 'الأرز',
+  'Phaseolus vulgaris': 'الفاصوليا',
+  'Vicia faba': 'الفول',
+  'Pisum sativum': 'البازلاء',
+  'Solanum melongena': 'الباذنجان',
+  'Citrus sinensis': 'البرتقال',
+  'Citrus limon': 'الليمون',
+  'Mangifera indica': 'المانجو',
+  'Musa acuminata': 'الموز',
+  'Olea europaea': 'الزيتون',
+  'Vitis vinifera': 'العنب',
+  'Fragaria × ananassa': 'الفراولة',
+  'Fragaria x ananassa': 'الفراولة',
+  'Malus domestica': 'التفاح',
+  'Coffea arabica': 'البن العربي',
+  'Nicotiana tabacum': 'التبغ',
+  'Rosa': 'الورد',
+  'Ocimum basilicum': 'الريحان',
+  'Mentha': 'النعناع',
+  'Zingiber officinale': 'الزنجبيل',
+  'Allium cepa': 'البصل',
+  'Allium sativum': 'الثوم',
+  'Daucus carota': 'الجزر',
+  'Lactuca sativa': 'الخس',
+  'Brassica oleracea': 'الكرنب',
+  'Spinacia oleracea': 'السبانخ',
+};
+
+function arabicPlantName(suggestion) {
+  const scientificName = typeof suggestion?.name === 'string' ? suggestion.name.trim() : '';
+  return ARABIC_PLANT_NAMES[scientificName]
+    || suggestion?.details?.common_names?.[0]
+    || scientificName
+    || 'نبات غير محدد';
+}
+
 function recommendationsFrom(value) {
-  const text = Array.isArray(value) ? value.join('\n') : typeof value === 'string' ? value : '';
+  const text = Array.isArray(value) ? value.join(String.fromCharCode(10)) : typeof value === 'string' ? value : '';
   const recommendations = text
-    .split(/\n|•|(?<=\.)\s+/)
-    .map((item) => item.replace(/^[-*]\s*/, '').trim())
+    .split('•')
+    .flatMap((part) => part.split(String.fromCharCode(10)))
+    .map((item) => item.replace(/^[-*]/, '').trim())
     .filter(Boolean);
 
   return recommendations.length ? recommendations.slice(0, 6) : ['متابعة حالة النبات واستشارة متخصص عند الحاجة.'];
@@ -31,13 +77,14 @@ async function analyzePlantImage(image) {
     throw error;
   }
 
-  const imageBase64 = image.replace(/^data:image\/[a-zA-Z0-9.+-]+;base64,/, '');
+  const commaIndex = image.indexOf(',');
+  const imageBase64 = commaIndex >= 0 ? image.slice(commaIndex + 1) : image;
   const query = new URLSearchParams({
     details: 'common_names,description,url',
     health: 'all',
     disease_details: 'local_name,description,treatment,cause',
   });
-  const apiResponse = await fetch(`${PLANT_ID_ENDPOINT}?${query}`, {
+  const apiResponse = await fetch(PLANT_ID_ENDPOINT + '?' + query, {
     method: 'POST',
     headers: { 'Api-Key': apiKey, 'Content-Type': 'application/json' },
     body: JSON.stringify({ images: [imageBase64] }),
@@ -51,8 +98,8 @@ async function analyzePlantImage(image) {
     if (apiResponse.status === 401 || apiResponse.status === 403) message = 'مفتاح خدمة Plant.id غير صالح أو غير مفعّل.';
     else if (apiResponse.status === 413) message = 'الصورة أكبر من الحد المسموح به لدى خدمة التحليل.';
     else if (apiResponse.status === 429) message = 'تم تجاوز حد الاستخدام في خدمة التحليل. حاول لاحقًا.';
-    else if (typeof data?.message === 'string') message = `خدمة Plant.id: ${data.message}`;
-    else if (typeof data?.error === 'string') message = `خدمة Plant.id: ${data.error}`;
+    else if (typeof data?.message === 'string') message = 'خدمة Plant.id: ' + data.message;
+    else if (typeof data?.error === 'string') message = 'خدمة Plant.id: ' + data.error;
     const error = new Error(message);
     error.status = apiResponse.status;
     throw error;
@@ -65,7 +112,7 @@ async function analyzePlantImage(image) {
   const diseaseDetails = diseaseSuggestion?.details || {};
 
   return {
-    plantName: plantSuggestion?.name || 'نبات غير محدد',
+    plantName: arabicPlantName(plantSuggestion),
     health: healthy ? 'healthy' : 'affected',
     healthLabel: healthy ? 'سليم' : 'مصاب أو متأثر',
     possibleIssue: diseaseSuggestion?.name || (healthy ? 'لم تظهر مؤشرات مرض واضحة' : 'مؤشرات تحتاج إلى فحص متخصص'),
